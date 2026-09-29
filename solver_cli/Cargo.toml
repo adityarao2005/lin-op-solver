@@ -1,0 +1,7 @@
+[package]
+name = "solver_cli"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+solver_lib = { path = "../solver_lib" }
