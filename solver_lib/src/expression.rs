@@ -193,8 +193,8 @@ impl Expression {
         };
     }
 
-    pub fn get_root_term(self) -> Box<dyn Term> {
-        return self.root_term;
+    pub fn get_root_term(&self) -> &dyn Term {
+        self.root_term.as_ref()
     }
 }
 
