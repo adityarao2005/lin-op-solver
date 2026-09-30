@@ -1,4 +1,4 @@
-use std::{collections::HashMap, vec};
+use std::{collections::{HashMap, HashSet}, vec};
 
 use crate::expression::TermComputationError::VariablesNotSpecified;
 
@@ -24,7 +24,7 @@ pub enum TermComputationError {
 }
 
 pub trait Term {
-    fn get_variables(&self) -> Vec<Variable>;
+    fn get_variables(&self) -> HashSet<Variable>;
     fn compute(&self, value_map: HashMap<Variable, f64>) -> Result<f64, TermComputationError>;
     fn get_child_terms(&self) -> &[Box<dyn Term>];
 }
@@ -44,14 +44,14 @@ impl Term for Sum {
         &self.terms
     }
 
-    fn get_variables(&self) -> Vec<Variable> {
-        let mut variables = Vec::new();
+    fn get_variables(&self) -> HashSet<Variable> {
+        let mut variables = HashSet::new();
 
         for term in self.terms.iter() {
-            let term_vars: Vec<Variable> = term.get_variables();
+            let term_vars = term.get_variables();
 
             for term_var in term_vars {
-                variables.push(term_var)
+                variables.insert(term_var);
             }
         }
 
@@ -93,14 +93,14 @@ impl Term for Product {
         &self.terms
     }
 
-    fn get_variables(&self) -> Vec<Variable> {
-        let mut variables = Vec::new();
+    fn get_variables(&self) -> HashSet<Variable> {
+        let mut variables = HashSet::new();
 
         for term in self.terms.iter() {
-            let term_vars: Vec<Variable> = term.get_variables();
+            let term_vars = term.get_variables();
 
             for term_var in term_vars {
-                variables.push(term_var)
+                variables.insert(term_var);
             }
         }
 
@@ -146,8 +146,8 @@ impl Term for Constant {
         &[]
     }
 
-    fn get_variables(&self) -> Vec<Variable> {
-        Vec::new()
+    fn get_variables(&self) -> HashSet<Variable> {
+        HashSet::new()
     }
 }
 
@@ -177,8 +177,8 @@ impl Term for VariableTerm {
         &[]
     }
 
-    fn get_variables(&self) -> Vec<Variable> {
-        vec![self.var.clone()]
+    fn get_variables(&self) -> HashSet<Variable> {
+        HashSet::from([self.var.clone()])
     }
 }
 
@@ -232,7 +232,7 @@ mod tests {
         map.insert(var.clone(), 3.5);
 
         assert_eq!(var_term.compute(map).unwrap(), 3.5);
-        assert_eq!(var_term.get_variables(), vec![var]);
+        assert_eq!(var_term.get_variables(), HashSet::from([var]));
         assert!(var_term.get_child_terms().is_empty());
     }
 
@@ -262,7 +262,7 @@ mod tests {
         map.insert(x.clone(), 10.0);
 
         assert_eq!(sum.compute(map).unwrap(), 17.5);
-        assert_eq!(sum.get_variables(), vec![x]);
+        assert_eq!(sum.get_variables(), HashSet::from([x]));
         assert_eq!(sum.get_child_terms().len(), 3);
     }
 
@@ -296,7 +296,7 @@ mod tests {
         map.insert(y.clone(), 4.0);
 
         assert_eq!(product.compute(map).unwrap(), 24.0);
-        assert_eq!(product.get_variables(), vec![x, y]);
+        assert_eq!(product.get_variables(), HashSet::from([x, y]));
         assert_eq!(product.get_child_terms().len(), 3);
     }
 
@@ -346,6 +346,6 @@ mod tests {
 
         // 2*4 + 3*5 + 1 = 8 + 15 + 1 = 24
         assert_eq!(root.compute(map).unwrap(), 24.0);
-        assert_eq!(root.get_variables(), vec![x, y]);
+        assert_eq!(root.get_variables(), HashSet::from([x, y]));
     }
 }
